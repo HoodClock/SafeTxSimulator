@@ -27,6 +27,16 @@ export default function TxSimulationResult({ simulationData }) {
     <h2 className="w-full text-2xl font-bold text-[#00FFAA] tracking-wide mb-4 border-b border-[#2A2A2A] pb-2">
       Simulation Result
     </h2>
+
+      {/* Display Error Reason if available */}
+    {simulationData.ErrorReason && (
+      <div className="w-full p-4 bg-[#FF5722] text-white rounded-lg shadow-md">
+        <h3 className="text-lg font-semibold mb-2">⚠️ Error Reason:</h3>
+        <p className="text-sm">{simulationData.ErrorReason}</p>
+      </div>
+    )}
+
+
     {Object.entries(simulationData).map(([key, value]) => (
       <div
         key={key}

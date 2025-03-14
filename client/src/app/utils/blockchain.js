@@ -56,24 +56,14 @@ export const calculateEstimateGas  = async (_to, _amount, _from)=> {
     }
   
     try {
+      
       const gas = await alchemyProvider.estimateGas(_trasnaction);
       
       // for the true or false error (if Any)
       return {success: true, gas:ethers.formatEther(gas)};
 
     } catch (error) {
-
-      console.error("Estimate Gas Error ::", error);
-    if (error.code === "INSUFFICIENT_FUNDS" || error.code === "ETIMEDOUT") {
-      return "0.000000000000021"; // Mock gas for simulation
-    }
-
-      // Return error details for other cases
-      return {
-        error: true,
-        message: error.shortMessage || error.message,
-        code: error.code || "UNKNOWN_ERROR",
-      };
+      return ({success: false, error: error.shortMessage})
     }
   }
   
