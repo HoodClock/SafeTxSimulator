@@ -6,14 +6,17 @@ import dotenv from "dotenv"
 
 dotenv.config();
 
-const isLocal = true // must set to false if using Alchemy
+const isLocal = true; // must set to false if using Alchemy
 
 
 
+const ganacheAPiKey = process.env.GANACHE_LOCAL_NETWORK;
 const alchemyApiKey = process.env.ETH_MAINNET_APIKEY;
-const alchemyUrl = isLocal ? "http://127.0.0.1:8545" : `https://eth-mainnet.g.alchemy.com/v2/${alchemyApiKey}`
 
-const alchemyProvider = new ethers.JsonRpcProvider(alchemyUrl);
+const providerUrl = isLocal ? "http://127.0.0.1:8545" : `https://eth-mainnet.g.alchemy.com/v2/${alchemyApiKey}`
+console.log("Provider URL:", providerUrl);
+
+const alchemyProvider = new ethers.JsonRpcProvider(providerUrl);
 
 
 // wallet provider function
@@ -45,16 +48,33 @@ export const getBalance = async (_address)=> {
 
 // now to calculate the estimated gas 
 export const calculateEstimateGas  = async (_to, _amount, _from)=> {
-    // onj of tx
+
     const _trasnaction = {
         to : _to,
         value : ethers.parseEther(_amount),
         from : _from
     }
   
-    const gas = await alchemyProvider.estimateGas(_trasnaction);
-    return ethers.formatEther(gas);
+    try {
+      const gas = await alchemyProvider.estimateGas(_trasnaction);
+      
+      // for the true or false error (if Any)
+      return {success: true, gas:ethers.formatEther(gas)};
 
+    } catch (error) {
+
+      console.error("Estimate Gas Error ::", error);
+    if (error.code === "INSUFFICIENT_FUNDS" || error.code === "ETIMEDOUT") {
+      return "0.000000000000021"; // Mock gas for simulation
+    }
+
+      // Return error details for other cases
+      return {
+        error: true,
+        message: error.shortMessage || error.message,
+        code: error.code || "UNKNOWN_ERROR",
+      };
+    }
   }
   
 

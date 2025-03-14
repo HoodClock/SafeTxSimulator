@@ -1,6 +1,6 @@
 // for nextjs Routes and business logic backend server of next js 
 
-import {ethers, EtherSymbol} from 'ethers'
+import {ethers} from 'ethers'
 import { getBalance, calculateEstimateGas, validateAddress } from '@/app/utils/blockchain'
 import dotenv from 'dotenv';
 
@@ -18,32 +18,47 @@ export async function POST(request) {
       });
     }
     
+
+    // validating reciever address
+    const isValidReciever = validateAddress(recipient);
+    if(!isValidReciever){
+      return new Response(JSON.stringify({error:"The reciever address is not valid"}));
+    }
     
-    const coinGekcoAPI = process.env.COIN_GECKO_API;
+    const _amount = Number(amount)
+    if (isNaN(Number(_amount))||Number(_amount) <= 0) {
+      return new Response(JSON.stringify({ error: "Invalid amount. Must be a positive number." }));
+    }
+    
+    // const coinGekcoAPI = process.env.COIN_GECKO_API;
 
     // current ETH balance of user
     const userWalletBalance = await getBalance(userWalletAddress);
 
-    const estimatedGasExtract = await calculateEstimateGas(recipient, amount, userWalletAddress)
 
-    
+    const gasEstimateResult = await calculateEstimateGas(recipient, amount, userWalletAddress);
+
+    const estimatedGasExtract = gasEstimateResult.gas;
 
     // to fetch the ether price in real time from coin Gecko
     const coinGeckoAPI = "https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd";
+
     const ethPriceGecko = await fetch(coinGeckoAPI)
+
     const ethPriceDataInJson = await ethPriceGecko.json();
+    
     const ethUsdGecko = ethPriceDataInJson.ethereum.usd || 0;
-    const gasCostUsd = (parseFloat(estimatedGasExtract) * ethUsdGecko).toFixed(14);
+    
+    const gasCostUsd = (parseFloat(estimatedGasExtract) * 
+    ethUsdGecko).toFixed(14);
 
     // calculate Gas Cost in USD
-    const estimateGasCostInEth = estimatedGasExtract;
+    const estimateGasCostInEth = (parseFloat(estimatedGasExtract) * 1e9).toFixed(6);
     const totalGasCostInUSD = (gasCostUsd * Number( estimateGasCostInEth)).toFixed(2);  
 
     // computing balance amount after tx
-    const totalBalanceAfterTx = ethers.formatEther(ethers.parseEther(userWalletBalance) - ethers.parseEther(amount) - ethers.parseEther(estimatedGasExtract));
+    const totalBalanceAfterTx = ethers.formatEther(ethers.parseEther(String(userWalletBalance)) - ethers.parseEther(String(amount)) - ethers.parseEther(String(estimatedGasExtract)));
 
-    // validating reciever address
-    const isValidReciever = validateAddress(recipient);
 
     // Check for transaction (success/faliure) rate
     const totalCostOfTx = ethers.parseEther(amount) + ethers.parseEther(totalGasCostInUSD);
@@ -63,7 +78,8 @@ export async function POST(request) {
         transactionStatus : txStatus,
         ethPriceInUsd :  ethUsdGecko,
         userAddress : userWalletAddress,
-        network : "Ganache Local" //change it when use mainnet
+        network : "Ethereum Mainnet",
+        ...(gasEstimateResult.error && {ErrorReason:gasEstimateResult.error}) // only add when there is really a error
      }), {
         status: 200,
         headers: { "Content-Type": "application/json" },

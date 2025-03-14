@@ -1,6 +1,8 @@
 "use client";
 import { useState } from "react";
 import axios from "axios";
+import { FaEthereum, FaUser, FaCheck } from "react-icons/fa";
+import { toast } from "react-toastify";
 import { useWallet } from "../hooks/userWallet";
 import { useSimulate } from "../hooks/useSimulate";
 import TxSimulationResult from "./TxSimResult";
@@ -18,46 +20,61 @@ export default function TxInputForm() {
       await connect();
     }
 
-
     const formData = {
       recipient : recipient,
       amount : amount,
       userWalletAddress : walletAddress
     }
 
-    const response = await axios.post("/api/simulate/", formData);
-
-    setSimulationData(response.data);
-
+    try {
+      const response = await axios.post("/api/simulate/", formData);
+  
+      setSimulationData(response.data);
+    } catch (error) {
+      console.error("Error:", error.response?.data?.error || "Unknown error");
+      toast.error(error.response?.data?.error || "Something went wrong");
+    }
   }
 
   return (
-    <div className="bg-gray-800 p-6 rounded shadow-md w-full max-w-md">
-      <h2 className="text-white text-lg mb-4">Transaction Details</h2>
-      <input
-        type="text"
-        placeholder="Recipient Address"
-        name="recipient"
-        value={recipient}
-        onChange={(e) => setRecipient(e.target.value)}
-        className="w-full p-2 mb-3 rounded bg-gray-700 text-white"
-      />
-      <input
-        type="number"
-        placeholder="Amount (ETH)"
-        name="amount"
-        value={amount}
-        onChange={(e) => setAmount(e.target.value)}
-        className="w-full p-2 mb-3 rounded bg-gray-700 text-white"
-      />
+    <>
+    <div className="p-6 w-full max-w-lg bg-[#121212] backdrop-blur-md rounded-xl shadow-xl border border-[#2A2A2A]">
+      <h2 className="text-2xl font-bold text-[#00FFAA] tracking-wide mb-4 border-b border-[#2A2A2A] pb-2">
+        Transaction Credentials
+      </h2>
+
+      <div className="relative w-full mb-4">
+        <FaUser className="absolute left-3 top-3 text-[#00FFC6] text-lg" />
+        <input
+          type="text"
+          placeholder="Recipient Address"
+          name="recipient"
+          value={recipient}
+          onChange={(e) => setRecipient(e.target.value)}
+          className="w-full p-3 pl-10 rounded-lg bg-[#1A1A1A] text-white border border-[#3A3A3A] focus:outline-none focus:ring-2 focus:ring-[#00FFC6] transition-shadow"
+        />
+      </div>
+
+      <div className="relative w-full mb-4">
+        <FaEthereum className="absolute left-3 top-3 text-[#FF9800] text-lg" />
+        <input
+          type="number"
+          placeholder="Amount (ETH)"
+          name="amount"
+          value={amount}
+          onChange={(e) => setAmount(e.target.value)}
+          className="w-full p-3 pl-10 rounded-lg bg-[#1A1A1A] text-white border border-[#3A3A3A] focus:outline-none focus:ring-2 focus:ring-[#FF9800] transition-shadow"
+        />
+      </div>
+
       <button
         onClick={inputFormSubmission}
-        className="bg-green-600 w-full p-2 rounded text-white hover:bg-green-700"
+        className="w-full p-3 rounded-lg bg-[#00FFAA] text-[#121212] font-semibold flex items-center justify-center gap-2 shadow-md hover:bg-[#00FFC6] transition-all hover:scale-105"
       >
-        Simulate Transaction
+        <FaCheck className="text-[#121212]" /> Simulate Transaction
       </button>
-
-      <div><TxSimulationResult simulationData={simulationData}/></div>
     </div>
+     <div><TxSimulationResult simulationData={simulationData}/></div>
+     </>
   );
 }
