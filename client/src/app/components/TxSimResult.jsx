@@ -29,12 +29,13 @@ export default function TxSimulationResult({ simulationData }) {
     </h2>
 
       {/* Display Error Reason if available */}
-    {simulationData.ErrorReason && (
-      <div className="w-full p-4 bg-[#FF5722] text-white rounded-lg shadow-md">
-        <h3 className="text-lg font-semibold mb-2">⚠️ Error Reason:</h3>
-        <p className="text-sm">{simulationData.ErrorReason}</p>
-      </div>
-    )}
+      {simulationData.ErrorReason && (
+  <div className="w-full p-4 rounded-lg shadow-md border border-red-400">
+        <h3 className="text-lg font-semibold text-red-200 mb-2">Errors:</h3>
+    <p className="error-text">{simulationData.ErrorReason}</p>
+  </div>
+)}
+
 
 
     {Object.entries(simulationData).map(([key, value]) => (
@@ -47,9 +48,15 @@ export default function TxSimulationResult({ simulationData }) {
           <p className="text-[#00FFAA] uppercase font-medium text-sm truncate">
             {key.replace(/([A-Z])/g, " $1").trim()}:
           </p>
-          <span className="text-[#EAEAEA] font-light block text-sm break-words">
+          {/* <span className="text-[#EAEAEA] font-light block text-sm break-words">
             {value.toString()}
-          </span>
+          </span> */}
+          <span className="text-[#EAEAEA] font-light block text-sm break-words">
+  {Array.isArray(value) ? value.join(", ") : 
+   (typeof value === "object" && Object.keys(value).length > 0) ? 
+   Object.entries(value).map(([k, v]) => `${k}: ${v}`).join(", ") : 
+   value.toString()}
+</span>
         </div>
       </div>
     ))}

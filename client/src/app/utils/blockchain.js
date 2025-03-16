@@ -1,6 +1,6 @@
 // Configuration file of Blockchain
 
-import {ethers} from "ethers"
+import {ethers, FeeDataNetworkPlugin} from "ethers"
 import dotenv from "dotenv"
 
 
@@ -57,13 +57,42 @@ export const calculateEstimateGas  = async (_to, _amount, _from)=> {
   
     try {
       
+      // estimate the tx
       const gas = await alchemyProvider.estimateGas(_trasnaction);
       
+      // getMaxPriorityFee
+      const feeData = await alchemyProvider.getFeeData();
+
+      // latest block Number
+      const latestBlock = await alchemyProvider.getBlockNumber()
+
+      // for network 
+      const network = await alchemyProvider.getNetwork();
+      const netName = network.name;
+      const netChainId = network.chainId;
+
+      // tx-type [type-2 {EIP-1559}, type-0 {Legacy}]
+      const txType = feeData.maxPriorityFeePerGas ? 2 : 0
+
+      // to check if reciever is contract
+      const isContract = (await alchemyProvider.getCode(_to)) !== "0x";
+
+      const returnData = {
+        gas: gas.toString(),
+        gasPrice: ethers.formatUnits(feeData.gasPrice, "gwei"),
+        feeData : ethers.formatUnits(feeData.maxPriorityFeePerGas, "gwei"),
+        maxFeeData: ethers.formatUnits(feeData.maxFeePerGas, "gwei"),
+        blockNumber: latestBlock,
+        network : {netName, netChainId},
+        txType: txType,
+        isContract: isContract,
+      }
+      
       // for the true or false error (if Any)
-      return {success: true, gas:ethers.formatEther(gas)};
+      return {success: true, data: returnData};
 
     } catch (error) {
-      return ({success: false, error: error.shortMessage})
+      return { success: false, error: error.shortMessage || error.message || "Unknown error" };
     }
   }
   

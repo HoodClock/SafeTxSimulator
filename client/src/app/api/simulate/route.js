@@ -32,7 +32,7 @@ export async function POST(request) {
   
       // Gas estimation
       const gasEstimateResult = await calculateEstimateGas(recipient, amount, userWalletAddress);
-      const estimatedGasExtract = gasEstimateResult.gas; // This is a string
+      const estimatedGasExtract = gasEstimateResult.data.gas;
   
       // Fetch ETH price from CoinGecko
       const coinGeckoAPI = "https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd";
@@ -40,24 +40,23 @@ export async function POST(request) {
       const ethPriceDataInJson = await ethPriceGecko.json();
       const ethUsdGecko = ethPriceDataInJson.ethereum.usd || 0;
   
-      // Calculate gas cost in USD and in ETH (using your existing logic)
-      const gasCostUsd = (parseFloat(estimatedGasExtract) * ethUsdGecko).toFixed(14);
-      const estimateGasCostInEth = (parseFloat(estimatedGasExtract) * 1e9).toFixed(6);
-      const totalGasCostInUSD = (gasCostUsd * Number(estimateGasCostInEth)).toFixed(2);
+      // Calculate gas cost in USD and in ETH 
+      const estimateGasCostInEth = ethers.formatUnits(estimatedGasExtract, "gwei");
+      const gasCostUsd = (Number(estimateGasCostInEth) * ethUsdGecko).toFixed(2);
   
       // Compute balance after transaction
       const totalBalanceAfterTx = ethers.formatEther(
-        ethers.parseEther(String(userWalletBalance)) -
-        ethers.parseEther(String(amount)) -
-        ethers.parseEther(String(estimatedGasExtract))
+        ethers.parseEther(userWalletBalance)-
+        (ethers.parseEther(amount))-
+      (ethers.parseUnits(estimatedGasExtract, "gwei"))
       );
   
       // Calculate total cost of transaction and determine transaction status
-      const totalCostOfTx = ethers.parseEther(amount) + ethers.parseEther(totalGasCostInUSD);
+      const totalCostOfTx = ethers.parseEther(amount) + ethers.parseEther(estimatedGasExtract, "gwei");
       const balanceWei = ethers.parseEther(userWalletBalance);
-      const txStatus = balanceWei >= totalCostOfTx 
+      const txStatus = balanceWei > totalCostOfTx 
         ? "Likely to succeed" 
-        : "Will Fail due to insufficient funds";
+        : "Will Fail";
   
       // If transaction is predicted to fail, add a default error reason if none from gas estimation
       let errorReason = gasEstimateResult?.error || null;
@@ -70,15 +69,20 @@ export async function POST(request) {
       const responseData = {
         receiverAddress: recipient,
         amount: amount,
-        gasCostEth: estimateGasCostInEth,
-        gasCostUsd: gasCostUsd,
-        balanceAfter: totalBalanceAfterTx,
-        balanceBefore: userWalletBalance,
+        gasCostEth: estimateGasCostInEth.toString(),
+        gasCostUsd: gasCostUsd.toString(),
+        balanceAfter: totalBalanceAfterTx.toString(),
+        balanceBefore: userWalletBalance.toString(),
         isValidReciever: validateAddress(recipient),
         transactionStatus: txStatus,
         ethPriceInUsd: ethUsdGecko,
         userAddress: userWalletAddress,
-        network: "Ethereum Mainnet",
+        networkDetails: {
+          ...gasEstimateResult.data.network,
+          netChainId: gasEstimateResult.data.network.netChainId.toString()
+      },
+        isRecieverContract: gasEstimateResult.data.isContract,
+        transactionType: gasEstimateResult.data.txType,
         ...(gasEstimateResult?.error ? { ErrorReason: gasEstimateResult.error } : {}),
         ...(errors.length > 0 ? { errors } : {}),
       };
