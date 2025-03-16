@@ -52,9 +52,9 @@ export async function POST(request) {
       );
   
       // Calculate total cost of transaction and determine transaction status
-      const totalCostOfTx = ethers.parseEther(amount) + ethers.parseEther(estimatedGasExtract, "gwei");
+      const totalCostOfTx = ethers.parseEther(amount) + ethers.parseUnits(estimatedGasExtract, "gwei");
       const balanceWei = ethers.parseEther(userWalletBalance);
-      const txStatus = balanceWei > totalCostOfTx 
+      const txStatus = balanceWei >= totalCostOfTx 
         ? "Likely to succeed" 
         : "Will Fail";
   
