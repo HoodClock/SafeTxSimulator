@@ -70,10 +70,12 @@ export const calculateEstimateGas  = async (_to, _amount, _from)=> {
       const latestBlock = await alchemyProvider.getBlockNumber()
 
       // for network 
-      const network = await alchemyProvider.getNetwork();
+      // const network = await alchemyProvider.getNetwork();
+
       // FOR USING LOCAL NETWORK
       // const netName = network.name;
       // const netChainId = network.chainId;
+
       const netName = "homestead";
       const netChainId = 1;
 
@@ -89,7 +91,7 @@ export const calculateEstimateGas  = async (_to, _amount, _from)=> {
         feeData : ethers.formatUnits(feeData.maxPriorityFeePerGas, "gwei"),
         maxFeeData: ethers.formatUnits(feeData.maxFeePerGas, "gwei"),
         blockNumber: latestBlock,
-        network : {netName, netChainId},
+        network : {netName: netName, netChainId: netChainId},
         txType: txType,
         isContract: isContract,
       }
