@@ -100,7 +100,9 @@ export const calculateEstimateGas  = async (_to, _amount, _from)=> {
       return {success: true, data: returnData};
 
     } catch (error) {
-      return { success: false, error: error.shortMessage || error.message || "Unknown error", data: {gas: "21000"} };
+      const netName = "homestead"; // Mainnet
+    const netChainId = 1;
+      return { success: false, error: error.shortMessage || error.message || "Unknown error", data: {gas: "21000"},network: { netName: netName, netChainId: netChainId }, };
     }
   }
   
