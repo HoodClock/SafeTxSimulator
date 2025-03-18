@@ -71,8 +71,11 @@ export const calculateEstimateGas  = async (_to, _amount, _from)=> {
 
       // for network 
       const network = await alchemyProvider.getNetwork();
-      const netName = network.name;
-      const netChainId = network.chainId;
+      // FOR USING LOCAL NETWORK
+      // const netName = network.name;
+      // const netChainId = network.chainId;
+      const netName = "homestead";
+      const netChainId = 1;
 
       // tx-type [type-2 {EIP-1559}, type-0 {Legacy}]
       const txType = feeData.maxPriorityFeePerGas ? 2 : 0
