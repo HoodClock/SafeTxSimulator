@@ -58,7 +58,10 @@ export const calculateEstimateGas  = async (_to, _amount, _from)=> {
     try {
       
       // estimate the tx
-      const gas = await alchemyProvider.estimateGas(_trasnaction);
+      const gas = await alchemyProvider.estimateGas({
+        ..._trasnaction,
+        gasLimit: ethers.parseUnits("1000000", "wei"),
+      });
       
       // getMaxPriorityFee
       const feeData = await alchemyProvider.getFeeData();
@@ -92,7 +95,7 @@ export const calculateEstimateGas  = async (_to, _amount, _from)=> {
       return {success: true, data: returnData};
 
     } catch (error) {
-      return { success: false, error: error.shortMessage || error.message || "Unknown error" };
+      return { success: false, error: error.shortMessage || error.message || "Unknown error", data: {gas: "21000"} };
     }
   }
   

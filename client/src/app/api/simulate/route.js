@@ -32,13 +32,8 @@ export async function POST(request) {
   
       // Gas estimation
       const gasEstimateResult = await calculateEstimateGas(recipient, amount, userWalletAddress);
-      if (!gasEstimateResult.success){
-        return new Response(JSON.stringify({error: gasEstimateResult.error}), {
-          status: 400,
-          headers: { "Content-Type": "application/json" },
-        });
-      }
-      const estimatedGasExtract = gasEstimateResult.data.gas;
+      
+      const estimatedGasExtract = gasEstimateResult.success ? gasEstimateResult.data.gas : gasEstimateResult.data.gas;
 
   
       // Fetch ETH price from CoinGecko
