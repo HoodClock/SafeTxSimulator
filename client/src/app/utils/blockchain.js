@@ -6,7 +6,7 @@ import dotenv from "dotenv"
 
 dotenv.config();
 
-const isLocal = true; // must set to false if using Alchemy
+const isLocal = false; // must set to false if using Alchemy
 
 
 
