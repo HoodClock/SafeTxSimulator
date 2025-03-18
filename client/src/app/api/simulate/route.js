@@ -67,6 +67,8 @@ export async function POST(request) {
         errors.push(errorReason);
       }
   
+
+      
       // Build the JSON response data including errors (if any)
       const responseData = {
         receiverAddress: recipient,
@@ -80,8 +82,8 @@ export async function POST(request) {
         ethPriceInUsd: ethUsdGecko,
         userAddress: userWalletAddress,
         networkDetails: {
-          ...gasEstimateResult.data.network,
-          netChainId: gasEstimateResult.data.network.netChainId.toString()
+          ...gasEstimateResult.network,
+          netChainId: gasEstimateResult.network.netChainId.toString()
       },
         isRecieverContract: gasEstimateResult.data.isContract,
         transactionType: gasEstimateResult.data.txType,
