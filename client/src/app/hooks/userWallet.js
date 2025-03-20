@@ -30,22 +30,27 @@ export const useWallet = ()=> {
     const [walletConnected, setWalletConnected] = useState(false)
     const [walletAddress, setWalletAddress] = useState(null)
 
-    // if wallet is already connected
-    useEffect(() => {
-      const checkInitialConnection = async () => {
-        if (typeof window !== "undefined" && window.ethereum && window.ethereum.selectedAddress) {
-          try {
-            const { signer } = await connectWallet();
-            const address = await signer.getAddress();
-            setWalletAddress(address);
-            setWalletConnected(true);
-          } catch (error) {
-            console.error("Initial wallet check failed:", error);
-          }
+   // useWallet.js (only updating the useEffect part)
+useEffect(() => {
+  const checkInitialConnection = async () => {
+    if (typeof window !== "undefined" && window.ethereum) {
+      try {
+        const web3Provider = new ethers.BrowserProvider(window.ethereum);
+        const accounts = await web3Provider.listAccounts();
+        if (accounts && accounts.length > 0) { // Add accounts check
+          const signer = await web3Provider.getSigner();
+          const address = await signer.getAddress();
+          setProvider(web3Provider);
+          setWalletAddress(address);
+          setWalletConnected(true);
         }
-      };
-      checkInitialConnection();
-    }, []);
+      } catch (error) {
+        console.error("Initial wallet check failed:", error);
+      }
+    }
+  };
+  checkInitialConnection();
+}, []);
 
    // Connect wallet with AppKit
   const connect = async () => {
