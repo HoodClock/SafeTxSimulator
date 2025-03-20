@@ -12,7 +12,7 @@ dotenv.config();
 
 // for the appkit (wallet Connection from reown)
 // const projectId = process.env.REOWN_PROJECT_ID;
-// const projectId = "f70ffe18a7d76affdfc37d8cbaffed9d"
+const projectId = "f70ffe18a7d76affdfc37d8cbaffed9d"
 const _vercelDepployedLink = process.env.VERCEL_DEPLYED_LINK;
 const appKit = createAppKit({
   projectId,
