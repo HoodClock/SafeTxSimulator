@@ -1,5 +1,6 @@
 "use client";
 import { useWallet } from "../hooks/userWallet";
+import { toast } from "react-toastify";
 
 export default function WalletConnect() {
 
@@ -9,9 +10,13 @@ export default function WalletConnect() {
     try {
 
       await connect();
+      toast.success("Wallet connected!", { autoClose: 3000 });
 
     } catch (error) {
-      console.log("Something wrong while connecting wallet", error)
+      toast.error(`Connection failed: ${error.message}`, {
+        autoClose: 5000,
+        position: "top-right",
+      });
     }
   }
 

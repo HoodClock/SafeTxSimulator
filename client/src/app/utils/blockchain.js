@@ -27,18 +27,27 @@ const getWalletProvider = async ()=> {
       throw new Error("No wallet detected");
 }
 
-// to connect Wallet
-const connectWallet  = async ()=>{
-    try {
-        const provider = await getWalletProvider();
-        await provider.send("eth_requestAccounts", []);
-        const signer = await provider.getSigner();
-        return { provider, signer };
-      } catch (error) {
-        console.error("Wallet connection failed:", error);
-        throw error;
-      }
-}
+// to connect Wallet (updated for AppKit)
+export const connectWallet = async () => {
+  try {
+    if (typeof window === "undefined") throw new Error("Run in browser");
+
+    // Fallback to injected provider (MetaMask, etc.)
+    let provider;
+    if (window.ethereum) {
+      provider = new ethers.BrowserProvider(window.ethereum);
+      await provider.send("eth_requestAccounts", []);
+    } else {
+      throw new Error("No wallet detected—install a wallet extension");
+    }
+
+    const signer = await provider.getSigner();
+    return { provider, signer };
+  } catch (error) {
+    console.error("Wallet connection failed:", error);
+    throw error;
+  }
+};
 
 // to get a balance using alchemy Provider built-in function 
 export const getBalance = async (_address)=> {
