@@ -4,6 +4,7 @@ import { ethers } from 'ethers';
 import { useAccount, useConnect, useDisconnect } from 'wagmi';
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { useWeb3Modal } from '@web3modal/wagmi/react';
 
 export const useWallet = () => {
   const [walletConnected, setWalletConnected] = useState(false);
@@ -14,6 +15,7 @@ export const useWallet = () => {
   const { address, isConnected } = useAccount();
   const { connect, connectors } = useConnect();
   const { disconnect } = useDisconnect();
+  const { open } = useWeb3Modal();
 
   useEffect(() => {
     const initializeProvider = async () => {
@@ -69,24 +71,27 @@ export const useWallet = () => {
         (connector) => connector.type === "walletConnect"
       );
 
-      if (!injectedConnector || !walletConnectConnector) {
-        throw new Error("Required connectors not found.");
+      if (!walletConnectConnector) {
+        console.error("WalletConnect connector not found:", { walletConnectConnector });
+        throw new Error("WalletConnect connector not found.");
       }
 
       // Try the injected connector (MetaMask) first
-      if (window.ethereum) {
+      if (window.ethereum && window.ethereum.isMetaMask) {
+        console.log("window.ethereum exists:", !!window.ethereum);
+console.log("window.ethereum.isMetaMask:", window.ethereum?.isMetaMask);
         console.log("Using injected connector (MetaMask)");
         connect({ connector: injectedConnector });
       } else {
         // If no injected provider, fall back to WalletConnect
         if (/Android|iPhone/i.test(navigator.userAgent)) {
           toast.info("Select WalletConnect or open this site in your wallet app.");
-          console.log("Using WalletConnect connector");
-        connect({ connector: walletConnectConnector });
         } else {
           toast.info("No MetaMask detected. Using WalletConnect...");
         }
-        
+        console.log("Using WalletConnect connector");
+        await open();
+        connect({ connector: walletConnectConnector });
       }
     } catch (error) {
       console.error("Wallet connection failed:", error);
