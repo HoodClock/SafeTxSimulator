@@ -8,8 +8,7 @@ dotenv.config();
 
 const isLocal = false; // must set to false if using Alchemy
 
-
-
+// my _envs
 const ganacheAPiKey = process.env.GANACHE_LOCAL_NETWORK;
 const alchemyApiKey = process.env.ETH_MAINNET_APIKEY;
 
@@ -19,34 +18,12 @@ console.log("Provider URL:", providerUrl);
 const alchemyProvider = new ethers.JsonRpcProvider(providerUrl);
 
 
-// wallet provider function
-const getWalletProvider = async ()=> {
-    if (typeof window !== "undefined" && window.ethereum) {
-        return new ethers.BrowserProvider(window.ethereum);
-      }
-      throw new Error("No wallet detected");
-}
-
-// to connect Wallet (updated for AppKit)
-export const connectWallet = async () => {
-  try {
-    if (typeof window === "undefined") throw new Error("Run in browser");
-
-    // Fallback to injected provider (MetaMask, etc.)
-    let provider;
-    if (window.ethereum) {
-      provider = new ethers.BrowserProvider(window.ethereum);
-      await provider.send("eth_requestAccounts", []);
-    } else {
-      throw new Error("No wallet detected—install a wallet extension");
-    }
-
-    const signer = await provider.getSigner();
-    return { provider, signer };
-  } catch (error) {
-    console.error("Wallet connection failed:", error);
-    throw error;
+// Wallet provider function for _wagmi
+export const getWalletProvider = async (wagmiProvider) => {
+  if (typeof window !== "undefined" && wagmiProvider) {
+    return new ethers.BrowserProvider(wagmiProvider);
   }
+  throw new Error("No wallet detected");
 };
 
 // to get a balance using alchemy Provider built-in function 
@@ -77,13 +54,6 @@ export const calculateEstimateGas  = async (_to, _amount, _from)=> {
 
       // latest block Number
       const latestBlock = await alchemyProvider.getBlockNumber()
-
-      // for network 
-      // const network = await alchemyProvider.getNetwork();
-
-      // FOR USING LOCAL NETWORK
-      // const netName = network.name;
-      // const netChainId = network.chainId;
 
       const netName = "homestead";
       const netChainId = 1;
@@ -121,6 +91,4 @@ export const validateAddress = (_address)=> {
     const validatedAddress = ethers.isAddress(_address);
     return validatedAddress;
 }
-
-export default connectWallet;
 

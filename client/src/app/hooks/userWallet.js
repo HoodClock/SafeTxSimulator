@@ -1,77 +1,89 @@
-// A custom hook for userWallet globaly accessability
+// app/hooks/useWallet.js
+'use client';
+import { useState, useEffect, useRef } from 'react';
+import { ethers } from 'ethers';
+import { useAccount, useConnect, useDisconnect } from 'wagmi';
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
-import { useState, useEffect } from "react";
-import connectWallet from "../utils/blockchain";
-import {ethers} from "ethers"
-import { createAppKit } from "@reown/appkit";
-import { EthersAdapter } from "@reown/appkit-adapter-ethers";
-import { mainnet } from "@reown/appkit/networks";
-import dotenv from 'dotenv';
 
-dotenv.config();
 
-// for the appkit (wallet Connection from reown)
-// const projectId = process.env.REOWN_PROJECT_ID;
-const projectId = "f70ffe18a7d76affdfc37d8cbaffed9d"
-const _vercelDepployedLink = process.env.VERCEL_DEPLYED_LINK;
-const appKit = createAppKit({
-  projectId,
-  networks: [mainnet],
-  metadata: {
-    name: "safeTxSim",
-    description: "Simulate Ethereum transactions",
-    url: _vercelDepployedLink,
-  },
-  adapters: [new EthersAdapter()],
-});
 
-export const useWallet = ()=> {
+export const useWallet = () => {
+  // saving up some states
+  const [walletConnected, setWalletConnected] = useState(false);
+  const [walletAddress, setWalletAddress] = useState(null);
+  const [provider, setProvider] = useState(null);
+  const hasShownToast = useRef(false);
 
-    const [walletConnected, setWalletConnected] = useState(false)
-    const [walletAddress, setWalletAddress] = useState(null)
+  // Using Wagmi hooks
+  const { address, isConnected } = useAccount();
+  const { connect, connectors } = useConnect();
+  const { disconnect } = useDisconnect();
 
-   // useWallet.js (only updating the useEffect part)
-useEffect(() => {
-  const checkInitialConnection = async () => {
-    if (typeof window !== "undefined" && window.ethereum) {
-      try {
-        const web3Provider = new ethers.BrowserProvider(window.ethereum);
-        const accounts = await web3Provider.listAccounts();
-        if (accounts && accounts.length > 0) { // Add accounts check
-          const signer = await web3Provider.getSigner();
-          const address = await signer.getAddress();
-          setProvider(web3Provider);
+
+  useEffect(() => {
+    
+    const initializeProvider = async () => {
+      if (isConnected && address) {
+        try {
+          const walletProvider = window.ethereum || (await connectors[0].getProvider?.());
+          if (!walletProvider) throw new Error("No wallet provider available");
+
+          const ethersProvider = new ethers.BrowserProvider(walletProvider);
+          setProvider(ethersProvider);
           setWalletAddress(address);
           setWalletConnected(true);
+          
+          // to check for toast using useRef
+          if(!hasShownToast.current){
+            toast.success("Wallet connected!", { autoClose: 1000 });
+            hasShownToast.current = true // now it will not shown again
+          }
+
+        } catch (error) {
+          console.error("Initial wallet setup failed:", error);
+          setWalletConnected(false);
+          setWalletAddress(null);
+          setProvider(null);
         }
-      } catch (error) {
-        console.error("Initial wallet check failed:", error);
+      } else {
+        setWalletConnected(false);
+        setWalletAddress(null);
+        setProvider(null);
       }
-    }
-  };
-  checkInitialConnection();
-}, []);
+    };
 
-   // Connect wallet with AppKit
-  const connect = async () => {
+    initializeProvider();
+  }, [isConnected, address, connectors]);
+
+  // connting logic
+  const connectWallet = async () => {
     try {
-      await appKit.open(); // Opens AppKit wallet selection modal
-      const walletProvider = appKit.getEthersProvider();
-      if (!walletProvider) throw new Error("No wallet selected");
-
-      const provider = new ethers.BrowserProvider(walletProvider);
-      const signer = await provider.getSigner();
-      const address = await signer.getAddress();
-
-      setWalletAddress(address);
-      setWalletConnected(true);
+      if (walletConnected) return;
+      connect({ connector: connectors[0] }); // Triggers Web3Modal
     } catch (error) {
       console.error("Wallet connection failed:", error);
       setWalletConnected(false);
       setWalletAddress(null);
+      setProvider(null);
+      throw error;
     }
   };
 
-  return { walletConnected, walletAddress, connect };
+  // Disconnecting logic
+  const disconnectWallet = () => {
+    disconnect();
+    setWalletConnected(false);
+    setWalletAddress(null);
+    setProvider(null);
+  };
 
-}
+  return {
+    walletConnected,
+    walletAddress,
+    connectWallet,
+    provider,
+    disconnect: disconnectWallet,
+  };
+};

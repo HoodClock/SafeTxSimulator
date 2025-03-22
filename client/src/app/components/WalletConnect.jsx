@@ -1,20 +1,33 @@
+// app/components/WalletConnect.jsx
 "use client";
 import { useWallet } from "../hooks/userWallet";
 import { toast } from "react-toastify";
+import { GiWallet } from "react-icons/gi"; 
+import { MdDelete } from "react-icons/md";
 import "react-toastify/dist/ReactToastify.css";
 
 export default function WalletConnect() {
+  const { walletConnected, walletAddress, connectWallet, disconnect } = useWallet();
 
-  const {walletConnected, walletAddress, connect} = useWallet();
-
-  const handleConnect = async ()=> {
+  const handleConnect = async () => {
     try {
+      await connectWallet();
+    } catch (error) {
+      toast.error(`Connection failed: ${error.message}`, {
+        autoClose: 5000,
+        position: "top-right",
+      });
+    }
+  };
 
-      await connect();
-      if (walletConnected) {
-        toast.success("Wallet connected!", { autoClose: 3000 });
+  const handleDelete = async () => {
+    try {
+      if (walletConnected){
+        await disconnect();
+        toast.info("Account is Disconnected", { autoClose: 1000 });
+      }else{
+        return ""
       }
-
     } catch (error) {
       toast.error(`Connection failed: ${error.message}`, {
         autoClose: 5000,
@@ -24,13 +37,28 @@ export default function WalletConnect() {
   }
 
   return (
+    <div className="flex space-x-2 gap-3"> {/* Flexbox to place buttons side by side */}
     <button
-  onClick={handleConnect}
-  className="px-6 py-2 rounded-lg bg-gradient-to-r from-[#00FFC6] to-[#00AAFF] text-black font-semibold shadow-md transition-all duration-300 hover:scale-105 hover:shadow-lg"
->
-  {walletConnected && walletAddress
-    ? `Connected: ${walletAddress.slice(0, 9)}...`
-    : "Connect Wallet"}
-</button>
+      onClick={handleConnect}
+      className="relative px-6 py-2 rounded-lg bg-gradient-to-r from-[#00FFC6] to-[#00AAFF] text-black font-semibold shadow-md transition-all duration-300 hover:scale-105 hover:shadow-lg flex items-center justify-center"
+    >
+      {walletConnected && walletAddress ? (
+        <>
+          <GiWallet className="mr-2 text-lg" />
+          {`${walletAddress.slice(0, 9)}...`}
+        </>
+      ) : (
+        <GiWallet className="text-lg" />
+      )}
+    </button>
+    {walletConnected && (
+      <button
+        onClick={handleDelete}
+        className="relative px-6 py-2 rounded-lg bg-gradient-to-r from-[#FF9800] to-[#D32F2F] text-white font-semibold shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl flex items-center justify-center"
+      >
+        <MdDelete className="text-lg" />
+      </button>
+    )}
+  </div>
   );
 }
