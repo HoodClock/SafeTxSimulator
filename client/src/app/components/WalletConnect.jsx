@@ -1,6 +1,4 @@
-// app/components/WalletConnect.jsx
 "use client";
-import { useState } from "react";
 import { useWallet } from "../hooks/userWallet";
 import { toast } from "react-toastify";
 import { GiWallet } from "react-icons/gi"; 
@@ -54,7 +52,10 @@ export default function WalletConnect() {
             {`${walletAddress.slice(0, 9)}...`}
           </>
         ) : (
-          <GiWallet className="text-lg" />
+          <>
+            <GiWallet className="mr-2 text-lg" />
+            Connect Wallet
+          </>
         )}
       </button>
       {walletConnected && (

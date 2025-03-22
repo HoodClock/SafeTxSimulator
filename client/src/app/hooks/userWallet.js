@@ -2,7 +2,7 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import { ethers } from 'ethers';
-import { useAccount, useConnect, useDisconnect } from 'wagmi';
+import { useAccount, useConnect, useDisconnect, useNetwork } from 'wagmi';
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -17,6 +17,7 @@ export const useWallet = () => {
   const { address, isConnected } = useAccount();
   const { connect, connectors } = useConnect();
   const { disconnect } = useDisconnect();
+  const { chain } = useNetwork();
 
 
   useEffect(() => {
@@ -44,6 +45,12 @@ export const useWallet = () => {
             hasShownToast.current = true // now it will not shown again
           }
 
+          const supportedChains = [1, 11155111]; // Mainnet and Sepolia (chain IDs from wagmi.config.js)
+          if (chain && !supportedChains.includes(chain.id)) {
+            toast.error(`Please switch to a supported network (Mainnet or Sepolia) in MetaMask.`);
+            disconnect(); // Disconnect if the network is wrong
+          }
+
         } catch (error) {
           console.error("Initial wallet setup failed:", error);
           setWalletConnected(false);
@@ -68,7 +75,7 @@ export const useWallet = () => {
       // Suggest WalletConnect or deep link on mobile
       toast.info("Select WalletConnect or open this site in your wallet app.");
     }
-    connect({ connector: connectors[0] });
+    await connect({ connector: connectors[0] }); // web3_model open 
     } catch (error) {
       console.error("Wallet connection failed:", error);
       setWalletConnected(false);
