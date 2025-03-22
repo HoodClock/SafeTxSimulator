@@ -28,7 +28,13 @@ export const useWallet = () => {
       if (isConnected && address) {
         try {
           const walletProvider = window.ethereum || (await connectors[0].getProvider?.());
-          if (!walletProvider) throw new Error("No wallet provider available");
+          if (!walletProvider){
+            if (/Android|iPhone/i.test(navigator.userAgent)) {
+              toast.info("Please use a wallet app like MetaMask or select WalletConnect.");
+              return;
+            }
+            throw new Error("No wallet provider available");
+          } 
 
           const ethersProvider = new ethers.BrowserProvider(walletProvider);
           setProvider(ethersProvider);
@@ -61,7 +67,11 @@ export const useWallet = () => {
   const connectWallet = async () => {
     try {
       if (walletConnected) return;
-      connect({ connector: connectors[0] }); // Triggers Web3Modal
+    if (!window.ethereum && /Android|iPhone/i.test(navigator.userAgent)) {
+      // Suggest WalletConnect or deep link on mobile
+      toast.info("Select WalletConnect or open this site in your wallet app.");
+    }
+    connect({ connector: connectors[0] });
     } catch (error) {
       console.error("Wallet connection failed:", error);
       setWalletConnected(false);

@@ -27,7 +27,6 @@ export default function ClientLayout({ children }) {
     createWeb3Modal({
       wagmiConfig: config,
       projectId: web3ModalConfig.projectId,
-      
       metadata: web3ModalConfig.metadata,
       enableAnalytics: true,
     });
