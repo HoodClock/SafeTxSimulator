@@ -1,54 +1,48 @@
-// app/hooks/useWallet.js
-'use client';
+"use client";
 import { useState, useEffect, useRef } from 'react';
 import { ethers } from 'ethers';
-import { useAccount, useConnect, useDisconnect} from 'wagmi';
+import { useAccount, useConnect, useDisconnect } from 'wagmi';
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 export const useWallet = () => {
-  // saving up some states
   const [walletConnected, setWalletConnected] = useState(false);
   const [walletAddress, setWalletAddress] = useState(null);
   const [provider, setProvider] = useState(null);
   const hasShownToast = useRef(false);
 
-  // Using Wagmi hooks
   const { address, isConnected } = useAccount();
   const { connect, connectors } = useConnect();
   const { disconnect } = useDisconnect();
 
-
   useEffect(() => {
-    
     const initializeProvider = async () => {
       if (isConnected && address) {
         try {
           const walletProvider = window.ethereum || (await connectors[0].getProvider?.());
-          if (!walletProvider){
+          if (!walletProvider) {
             if (/Android|iPhone/i.test(navigator.userAgent)) {
               toast.info("Please use a wallet app like MetaMask or select WalletConnect.");
               return;
             }
             throw new Error("No wallet provider available");
-          } 
+          }
 
           const ethersProvider = new ethers.BrowserProvider(walletProvider);
           setProvider(ethersProvider);
           setWalletAddress(address);
           setWalletConnected(true);
-          
-          // to check for toast using useRef
-          if(!hasShownToast.current){
-            toast.success("Wallet connected!", { autoClose: 1000 });
-            hasShownToast.current = true // now it will not shown again
-          }
 
+          if (!hasShownToast.current) {
+            toast.success("Wallet connected!", { autoClose: 1000 });
+            hasShownToast.current = true;
+          }
         } catch (error) {
           console.error("Initial wallet setup failed:", error);
           setWalletConnected(false);
           setWalletAddress(null);
           setProvider(null);
+          toast.error("Failed to connect wallet. Please try again or use WalletConnect.");
         }
       } else {
         setWalletConnected(false);
@@ -60,38 +54,50 @@ export const useWallet = () => {
     initializeProvider();
   }, [isConnected, address, connectors]);
 
-  // connting logic
   const connectWallet = async () => {
     try {
       if (walletConnected) return;
 
+      // Log the available connectors for debugging
       console.log("Available connectors:", connectors);
 
-     // Try the injected connector (MetaMask) first
-     if (window.ethereum) {
-      console.log("Using injected connector (MetaMask)");
-      connect({ connector: connectors[0] }); // Remove await
-    } else {
-      // If no injected provider, fall back to WalletConnect
-      if (/Android|iPhone/i.test(navigator.userAgent)) {
-        toast.info("Select WalletConnect or open this site in your wallet app.");
-      } else {
-        toast.info("No MetaMask detected. Using WalletConnect...");
-      }
-      console.log("Using WalletConnect connector");
-      connect({ connector: connectors[1] });
+      // Find the injected (MetaMask) and WalletConnect connectors
+      const injectedConnector = connectors.find(
+        (connector) => connector.type === "injected" && connector.id === "io.metamask"
+      );
+      const walletConnectConnector = connectors.find(
+        (connector) => connector.type === "walletConnect"
+      );
 
-      }  
+      if (!injectedConnector || !walletConnectConnector) {
+        throw new Error("Required connectors not found.");
+      }
+
+      // Try the injected connector (MetaMask) first
+      if (window.ethereum) {
+        console.log("Using injected connector (MetaMask)");
+        connect({ connector: injectedConnector });
+      } else {
+        // If no injected provider, fall back to WalletConnect
+        if (/Android|iPhone/i.test(navigator.userAgent)) {
+          toast.info("Select WalletConnect or open this site in your wallet app.");
+          console.log("Using WalletConnect connector");
+        connect({ connector: walletConnectConnector });
+        } else {
+          toast.info("No MetaMask detected. Using WalletConnect...");
+        }
+        
+      }
     } catch (error) {
       console.error("Wallet connection failed:", error);
       setWalletConnected(false);
       setWalletAddress(null);
       setProvider(null);
+      toast.error("Wallet connection failed. Please try again or check your wallet.");
       throw error;
     }
   };
 
-  // Disconnecting logic
   const disconnectWallet = () => {
     disconnect();
     setWalletConnected(false);
