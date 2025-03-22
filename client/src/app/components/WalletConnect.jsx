@@ -1,5 +1,6 @@
 // app/components/WalletConnect.jsx
 "use client";
+import { useState } from "react";
 import { useWallet } from "../hooks/userWallet";
 import { toast } from "react-toastify";
 import { GiWallet } from "react-icons/gi"; 
