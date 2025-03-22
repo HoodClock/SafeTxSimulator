@@ -64,11 +64,19 @@ export const useWallet = () => {
   const connectWallet = async () => {
     try {
       if (walletConnected) return;
-    if (!window.ethereum && /Android|iPhone/i.test(navigator.userAgent)) {
-      // Suggest WalletConnect or deep link on mobile
-      toast.info("Select WalletConnect or open this site in your wallet app.");
-    }
-    await connect({ connector: connectors[0] }); // web3_model open 
+
+      // Try the injected connector (MetaMask) first
+      if (window.ethereum) {
+        await connect({ connector: connectors[0] }); // connectors[0] is injected (MetaMask)
+      } else {
+        // If no injected provider, fall back to WalletConnect
+        if (/Android|iPhone/i.test(navigator.userAgent)) {
+          toast.info("Select WalletConnect or open this site in your wallet app.");
+        } else {
+          toast.info("No MetaMask detected. Using WalletConnect...");
+        }
+        await connect({ connector: connectors[1] });
+       } // web3_model open 
     } catch (error) {
       console.error("Wallet connection failed:", error);
       setWalletConnected(false);

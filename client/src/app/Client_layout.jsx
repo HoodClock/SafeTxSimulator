@@ -1,4 +1,3 @@
-// src/app/ClientLayout.jsx
 "use client";
 import { useEffect } from "react";
 import { Geist, Geist_Mono } from "next/font/google";
@@ -29,6 +28,10 @@ export default function ClientLayout({ children }) {
       projectId: web3ModalConfig.projectId,
       metadata: web3ModalConfig.metadata,
       enableAnalytics: true,
+      themeMode: "dark", // Optional: for better visibility
+      themeVariables: {
+        "--w3m-z-index": 1000, // Ensure it appears above other elements
+      },
     });
   }, []);
 

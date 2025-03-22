@@ -12,7 +12,7 @@ const providerUrl = process.env.ETH_MAINNET_ALCHEMY_URL_API_KEY;
 export const config = createConfig({
   chains: [mainnet, sepolia],
   connectors: [
-    // injected({ target: "metaMask" }), // MetaMask
+    injected({ target: "metaMask" }), // MetaMask
     walletConnect({ projectId }), // WalletConnect
   ],
   transports: {
