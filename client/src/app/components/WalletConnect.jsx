@@ -1,6 +1,7 @@
 "use client";
 import { useWallet } from "../hooks/userWallet";
 import { toast } from "react-toastify";
+import { useState } from "react";
 import { GiWallet } from "react-icons/gi"; 
 import { MdDelete } from "react-icons/md";
 import "react-toastify/dist/ReactToastify.css";

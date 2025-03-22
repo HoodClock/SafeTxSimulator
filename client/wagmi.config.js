@@ -7,6 +7,7 @@ import { configDotenv } from "dotenv";
 configDotenv();
 
 const projectId = process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID || "f70ffe18a7d76affdfc37d8cbaffed9d";
+const providerUrl = process.env.ETH_MAINNET_ALCHEMY_URL_API_KEY;
 
 export const config = createConfig({
   chains: [mainnet, sepolia],
@@ -15,8 +16,7 @@ export const config = createConfig({
     walletConnect({ projectId }), // WalletConnect
   ],
   transports: {
-    [mainnet.id]: http(),
-    [sepolia.id]: http(),
+    [mainnet.id]: http(providerUrl),
   },
 });
 
