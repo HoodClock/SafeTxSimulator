@@ -1,6 +1,6 @@
 // for handling globally the simulation data 
-
-import { useState} from "react";
+"use client";
+import { useState } from "react";
 
 
 export const  useSimulate = ()=> {

@@ -6,9 +6,6 @@ import { useAccount, useConnect, useDisconnect } from 'wagmi';
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-
-
-
 export const useWallet = () => {
   // saving up some states
   const [walletConnected, setWalletConnected] = useState(false);
