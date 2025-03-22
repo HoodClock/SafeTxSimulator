@@ -72,10 +72,10 @@ export const useWallet = () => {
         // If no injected provider, fall back to WalletConnect
         if (/Android|iPhone/i.test(navigator.userAgent)) {
           toast.info("Select WalletConnect or open this site in your wallet app.");
+          await connect({ connector: connectors[1] });
         } else {
           toast.info("No MetaMask detected. Using WalletConnect...");
         }
-        await connect({ connector: connectors[1] });
        } // web3_model open 
     } catch (error) {
       console.error("Wallet connection failed:", error);
