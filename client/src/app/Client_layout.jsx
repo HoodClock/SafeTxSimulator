@@ -23,7 +23,8 @@ const queryClient = new QueryClient();
 
 export default function ClientLayout({ children }) {
   useEffect(() => {
-    createWeb3Modal({
+    console.log("Initializing Web3Modal with projectId:", web3ModalConfig.projectId);
+    const model = createWeb3Modal({
       wagmiConfig: config,
       projectId: web3ModalConfig.projectId,
       metadata: web3ModalConfig.metadata,
@@ -33,6 +34,7 @@ export default function ClientLayout({ children }) {
         "--w3m-z-index": 1000, // Ensure it appears above other elements
       },
     });
+    console.log("Web3Modal instance created:", model);
   }, []);
 
   return (
