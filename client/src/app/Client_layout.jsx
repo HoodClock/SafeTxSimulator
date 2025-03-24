@@ -4,7 +4,7 @@ import "./globals.css";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { WagmiProvider } from "wagmi";
-import { config, web3ModalConfig } from "../../wagmi.config";
+import { config, projectId } from "../../src/lib/wagmi";
 import { createWeb3Modal } from "@web3modal/wagmi/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
@@ -20,19 +20,16 @@ const geistMono = Geist_Mono({
 
 const queryClient = new QueryClient();
 
-// Initialize Web3Modal immediately when the module loads
-console.log("Initializing Web3Modal with projectId:", web3ModalConfig.projectId);
-const modal = createWeb3Modal({
+// Initialize Web3Modal
+createWeb3Modal({
   wagmiConfig: config,
-  projectId: web3ModalConfig.projectId,
-  metadata: web3ModalConfig.metadata,
+  projectId,
   enableAnalytics: true,
   themeMode: "dark",
   themeVariables: {
     "--w3m-z-index": 1000,
   },
 });
-console.log("Web3Modal instance created:", modal);
 
 export default function ClientLayout({ children }) {
   return (

@@ -3,21 +3,21 @@ import { useState } from "react";
 import axios from "axios";
 import { FaEthereum, FaUser, FaCheck } from "react-icons/fa";
 import { toast } from "react-toastify";
-import { useWallet } from "../hooks/userWallet";
+import { useWalletConnect } from "../hooks/useWalletConnect";
 import { useSimulate } from "../hooks/useSimulate";
 import TxSimulationResult from "./TxSimResult";
 
 export default function TxInputForm() {
   const [recipient, setRecipient] = useState("");
   const [amount, setAmount] = useState("");
-  const {walletConnected, walletAddress, connect} = useWallet();
+  const { address, isConnected, handleConnect } = useWalletConnect();
   const {simulationData, setSimulationData} = useSimulate();
 
 
   const inputFormSubmission = async ()=> {
 
-    if (!walletConnected){
-      await connect();
+    if (!isConnected) {
+      await handleConnect();
     }
 
     const formData = {
@@ -38,7 +38,7 @@ export default function TxInputForm() {
 
   return (
     <>
-      <div className="p-6 w-full max-w-lg bg-[#121212]/90 backdrop-blur-md rounded-xl shadow-xl border border-[#2A2A2A]">
+       <div className="p-6 w-full max-w-lg bg-[#121212]/90 backdrop-blur-md rounded-xl shadow-xl border border-[#2A2A2A]">
         <h2 className="text-2xl font-bold text-[#00FFAA] tracking-wide mb-4 border-b border-[#2A2A2A] pb-2">
           Transaction Credentials
         </h2>

@@ -1,19 +1,23 @@
 "use client";
-import { useWallet } from "../hooks/userWallet";
+import { useWalletConnect } from "../hooks/useWalletConnect";
 import { toast } from "react-toastify";
 import { useState } from "react";
-import { GiWallet } from "react-icons/gi"; 
+import { GiWallet } from "react-icons/gi";
 import { MdDelete } from "react-icons/md";
 import "react-toastify/dist/ReactToastify.css";
 
 export default function WalletConnect() {
-  const { walletConnected, walletAddress, connectWallet, disconnect } = useWallet();
+  const { address, isConnected, handleConnect, handleDisconnect } = useWalletConnect();
   const [isConnecting, setIsConnecting] = useState(false);
 
-  const handleConnect = async () => {
+  const handleWalletConnect = async () => {
     try {
       setIsConnecting(true);
-      await connectWallet();
+      await handleConnect(); // Use the handleConnect from useWalletConnect
+      toast.success("Wallet connected successfully!", {
+        autoClose: 3000,
+        position: "top-right",
+      });
     } catch (error) {
       toast.error(`Connection failed: ${error.message}`, {
         autoClose: 5000,
@@ -24,33 +28,33 @@ export default function WalletConnect() {
     }
   };
 
-  const handleDelete = async () => {
+  const handleDelete = async ()=> {
     try {
-      if (walletConnected) {
-        await disconnect();
-        toast.info("Account is Disconnected", { autoClose: 1000 });
+      if(isConnected){
+        await handleDelete();
+        setIsConnecting(false)
+        toast.info("Wallet Disconnected", {autoClose: 1000});
       }
     } catch (error) {
-      toast.error(`Connection failed: ${error.message}`, {
-        autoClose: 5000,
-        position: "top-right",
-      });
+      toast.error("Disconnection of wallet is failed", {autoClose: 3000});
     }
-  };
+  }
 
   return (
     <div className="flex space-x-2 gap-3">
       <button
-        onClick={handleConnect}
+        onClick={handleWalletConnect}
         disabled={isConnecting}
-        className={`relative px-6 py-2 rounded-lg bg-gradient-to-r from-[#00FFC6] to-[#00AAFF] text-black font-semibold shadow-md transition-all duration-300 hover:scale-105 hover:shadow-lg flex items-center justify-center ${isConnecting ? "opacity-50 cursor-not-allowed" : ""}`}
+        className={`relative px-6 py-2 rounded-lg bg-gradient-to-r from-[#00FFC6] to-[#00AAFF] text-black font-semibold shadow-md transition-all duration-300 hover:scale-105 hover:shadow-lg flex items-center justify-center ${
+          isConnecting ? "opacity-50 cursor-not-allowed" : ""
+        }`}
       >
         {isConnecting ? (
           "Connecting..."
-        ) : walletConnected && walletAddress ? (
+        ) : isConnected && address ? (
           <>
             <GiWallet className="mr-2 text-lg" />
-            {`${walletAddress.slice(0, 9)}...`}
+            {`${address.slice(0, 9)}...`}
           </>
         ) : (
           <>
@@ -59,7 +63,7 @@ export default function WalletConnect() {
           </>
         )}
       </button>
-      {walletConnected && (
+      {isConnected && (
         <button
           onClick={handleDelete}
           className="relative px-6 py-2 rounded-lg bg-gradient-to-r from-[#FF9800] to-[#D32F2F] text-white font-semibold shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl flex items-center justify-center"
