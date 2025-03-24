@@ -1,8 +1,11 @@
 import { createConfig, http } from 'wagmi'
 import { mainnet } from 'wagmi/chains'
 import { injected, walletConnect } from 'wagmi/connectors'
+import dotenv from 'dotenv'
 
-const projectId =  '2d34df257efc7f32e775b6f41c113656'
+dotenv.config();
+
+const projectId =  process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID;
 
 export const config = createConfig({
   chains: [mainnet],
@@ -12,7 +15,7 @@ export const config = createConfig({
   ],
   transports: {
     [mainnet.id]: http(
-      `https://eth-mainnet.g.alchemy.com/v2/OGV_n2eZLWhUudF4l0BaNCt94X7FIJKX`
+      process.env.ETH_MAINNET_ALCHEMY_URL_API_KEY
     )
   }
 })

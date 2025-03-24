@@ -4,14 +4,14 @@ import { useAccount, useDisconnect } from 'wagmi'
 export function useWalletConnect() {
   const { open } = useWeb3Modal();
   const { address, isConnected } = useAccount();
-  const {discount} = useDisconnect();
+  const {disconnect} = useDisconnect();
 
   const handleConnect = () => {
     open();
   }
 
   const handleDisconnect = () => {
-    discount();
+    disconnect();
   }
 
   return {

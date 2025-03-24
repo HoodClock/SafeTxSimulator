@@ -1,10 +1,11 @@
 "use client";
-import { useWalletConnect } from "../hooks/useWalletConnect";
 import { toast } from "react-toastify";
 import { useState } from "react";
 import { GiWallet } from "react-icons/gi";
 import { MdDelete } from "react-icons/md";
 import "react-toastify/dist/ReactToastify.css";
+import { useWalletConnect } from "../hooks/useWalletConnect";
+
 
 export default function WalletConnect() {
   const { address, isConnected, handleConnect, handleDisconnect } = useWalletConnect();
@@ -31,8 +32,7 @@ export default function WalletConnect() {
   const handleDelete = async ()=> {
     try {
       if(isConnected){
-        await handleDelete();
-        setIsConnecting(false)
+        await handleDisconnect();
         toast.info("Wallet Disconnected", {autoClose: 1000});
       }
     } catch (error) {
