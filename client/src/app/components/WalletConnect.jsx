@@ -8,13 +8,11 @@ import { useWalletConnect } from "../hooks/useWalletConnect";
 
 
 export default function WalletConnect() {
-  const { address, isConnected, handleConnect, handleDisconnect } = useWalletConnect();
-  const [isConnecting, setIsConnecting] = useState(false);
+  const { address, isConnected, isConnecting, handleConnect, handleDisconnect } = useWalletConnect();
 
   const handleWalletConnect = async () => {
     try {
-      setIsConnecting(true);
-      await handleConnect(); // Use the handleConnect from useWalletConnect
+      await handleConnect(); // Hook manages retries and state
       toast.success("Wallet connected successfully!", {
         autoClose: 3000,
         position: "top-right",
@@ -24,21 +22,19 @@ export default function WalletConnect() {
         autoClose: 5000,
         position: "top-right",
       });
-    } finally {
-      setIsConnecting(false);
     }
   };
 
-  const handleDelete = async ()=> {
+  const handleWalletDisconnect = async () => {
     try {
-      if(isConnected){
+      if (isConnected) {
         await handleDisconnect();
-        toast.info("Wallet Disconnected", {autoClose: 1000});
+        toast.info("Wallet Disconnected", { autoClose: 1000 });
       }
     } catch (error) {
-      toast.error("Disconnection of wallet is failed", {autoClose: 3000});
+      toast.error("Disconnection failed", { autoClose: 3000 });
     }
-  }
+  };
 
   return (
     <div className="flex space-x-2 gap-3">
@@ -65,7 +61,7 @@ export default function WalletConnect() {
       </button>
       {isConnected && (
         <button
-          onClick={handleDelete}
+          onClick={handleDisconnect}
           className="relative px-6 py-2 rounded-lg bg-gradient-to-r from-[#FF9800] to-[#D32F2F] text-white font-semibold shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl flex items-center justify-center"
         >
           <MdDelete className="text-lg" />

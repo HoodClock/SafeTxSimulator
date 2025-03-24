@@ -23,7 +23,7 @@ export default function TxInputForm() {
     const formData = {
       recipient : recipient,
       amount : amount,
-      userWalletAddress : walletAddress
+      userWalletAddress : address
     }
 
     try {

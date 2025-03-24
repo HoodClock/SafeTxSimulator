@@ -11,7 +11,16 @@ export const config = createConfig({
   chains: [mainnet],
   connectors: [
     injected(),
-    walletConnect({projectId})
+    walletConnect({
+      projectId,
+      relayUrl: 'wss://relay.walletconnect.com',
+      metadata: {
+        name: "Safe Transaction Simulator",
+        description: "Try to simulate the transaction without even spending any penny.",
+        url: "https://safe-tx-simulator.vercel.app/",
+        icons: ["/favicon.ico"]
+      }
+    })
   ],
   transports: {
     [mainnet.id]: http(
