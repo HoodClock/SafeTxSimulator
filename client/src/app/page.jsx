@@ -3,14 +3,11 @@ import Footer from "./components/Footer";
 import TxInputForm from "./components/InputForm";
 import TxSimulationResult from "./components/TxSimResult";
 import WalletConnect from "./components/WalletConnect";
-import ParticlesWrapper from "./components/ParticlesWrapper";
 
 
 export default function Home() {
   return (
     <div className="relative min-h-screen bg-gradient-to-br from-[#0D0D0D] via-[#1A535C] to-[#4FD1C5] text-white">
-      {/* Particles Background */}
-      <ParticlesWrapper />
 
       {/* Content */}
       <div className="relative z-10 grid grid-rows-[auto_1fr_auto] items-center justify-items-center min-h-screen p-10 gap-12 sm:p-20">

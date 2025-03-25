@@ -33,57 +33,72 @@ export const getBalance = async (_address)=> {
 }
 
 // now to calculate the estimated gas 
-export const calculateEstimateGas  = async (_to, _amount, _from)=> {
-
-    const _trasnaction = {
-        to : _to,
-        value : ethers.parseEther(_amount),
-        from : _from
-    }
+export const calculateEstimateGas = async (_to, _amount, _from) => {
+  const _trasnaction = {
+      to: _to,
+      value: ethers.parseEther(_amount),
+      from: _from
+  };
   
-    try {
+  // Initialize all variables used in both try/catch at the top
+  let isContract = false;
+  let netName = "homestead";
+  let netChainId = 1;
+  let gas = null;
+  let feeData = null;
+  let latestBlock = null;
+  let txType = 0;
+
+  try {
+      // Check contract status first
+      isContract = (await alchemyProvider.getCode(_to)) !== "0x";
       
-      // estimate the tx
-      const gas = await alchemyProvider.estimateGas({
-        ..._trasnaction,
-        gasLimit: ethers.parseUnits("1000000", "wei"),
+      // Then estimate gas
+      gas = await alchemyProvider.estimateGas({
+          ..._trasnaction,
+          gasLimit: ethers.parseUnits("1000000", "wei"),
       });
-      
-      // getMaxPriorityFee
-      const feeData = await alchemyProvider.getFeeData();
 
-      // latest block Number
-      const latestBlock = await alchemyProvider.getBlockNumber()
+      // Get other data
+      feeData = await alchemyProvider.getFeeData();
+      latestBlock = await alchemyProvider.getBlockNumber();
+      txType = feeData.maxPriorityFeePerGas ? 2 : 0;
 
-      const netName = "homestead";
-      const netChainId = 1;
+      return {
+          success: true,
+          data: {
+              gas: gas.toString(),
+              gasPrice: ethers.formatUnits(feeData.gasPrice, "gwei"),
+              feeData: ethers.formatUnits(feeData.maxPriorityFeePerGas, "gwei"),
+              maxFeeData: ethers.formatUnits(feeData.maxFeePerGas, "gwei"),
+              blockNumber: latestBlock,
+              network: { netName, netChainId },
+              txType,
+              isContract,
+          }
+      };
 
-      // tx-type [type-2 {EIP-1559}, type-0 {Legacy}]
-      const txType = feeData.maxPriorityFeePerGas ? 2 : 0
-
-      // to check if reciever is contract
-      const isContract = (await alchemyProvider.getCode(_to)) !== "0x";
-
-      const returnData = {
-        gas: gas.toString(),
-        gasPrice: ethers.formatUnits(feeData.gasPrice, "gwei"),
-        feeData : ethers.formatUnits(feeData.maxPriorityFeePerGas, "gwei"),
-        maxFeeData: ethers.formatUnits(feeData.maxFeePerGas, "gwei"),
-        blockNumber: latestBlock,
-        network : {netName: netName, netChainId: netChainId},
-        txType: txType,
-        isContract: isContract,
+  } catch (error) {
+      // Fallback contract check if initial check failed
+      try {
+          isContract = (await alchemyProvider.getCode(_to)) !== "0x";
+      } catch (e) {
+          console.error("Contract check failed:", e.message);
       }
-      
-      // for the true or false error (if Any)
-      return {success: true, data: returnData};
 
-    } catch (error) {
-      const netName = "homestead"; // Mainnet
-    const netChainId = 1;
-      return { success: false, error: error.shortMessage || error.message || "Unknown error", data: {gas: "21000"},network: { netName: netName, netChainId: netChainId }, };
-    }
+      return {
+          success: false,
+          error: error.shortMessage || error.message || "Unknown error",
+          data: {
+              isContract,
+              gas: gas?.toString() || null,
+              gasPrice: feeData ? ethers.formatUnits(feeData.gasPrice, "gwei") : null,
+              network: { netName, netChainId }
+          },
+          network: { netName, netChainId }
+      };
   }
+};
   
 
 // to check if the recipient address is a valid ethereum address or not ?
