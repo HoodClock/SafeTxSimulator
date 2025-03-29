@@ -10,11 +10,16 @@ export async function POST(request) {
     try {
       const { recipient, amount, userWalletAddress } = await request.json();
       const errors = [];
-  
-      // Validate user wallet address
-      if (!userWalletAddress) errors.push("User wallet address is required");
-      if (!validateAddress(recipient)) errors.push("Invalid receiver address");
 
+      let normalizedRecipient;
+      try {
+        normalizedRecipient = ethers.getAddress(recipient.trim().toLowerCase());
+      } catch (error) {
+        errors.push("Invalid receiver address");
+      }
+  
+      // Validate user wallet address and reciever
+      if (!userWalletAddress) errors.push("User wallet address is required");
   
       // Validate amount (convert to number)
       const _amount = Number(amount);
@@ -32,9 +37,10 @@ export async function POST(request) {
 
       // Current ETH balance of user (as a string)
       const userWalletBalance = await getBalance(userWalletAddress);
+      // const userWalletBalance = "0.01"
   
       // Gas estimation
-      const gasEstimateResult = await calculateEstimateGas(recipient, amount, userWalletAddress);
+      const gasEstimateResult = await calculateEstimateGas(normalizedRecipient, amount, userWalletAddress);
       
       const estimatedGasExtract = gasEstimateResult.success ? gasEstimateResult.data.gas : "0";
 
@@ -65,32 +71,45 @@ export async function POST(request) {
   
       // If transaction is predicted to fail, add a default error reason if none from gas estimation
       let errorReason = gasEstimateResult?.error || null;
+      console.log(errorReason)
       if (!errorReason && txStatus.startsWith("Will Fail")) {
         errorReason = "Insufficient funds to cover the transaction amount and gas fees.";
         errors.push(errorReason);
       }
   
+      // to check for contract and if (honeypot)
+      let honeyPotWarning = null;
+      if (gasEstimateResult.data.isContract){
+        honeyPotWarning = "This is a smart contract. Verify its safety before sending real funds"
+        if (gasEstimateResult.data.isSuspicious){
+          honeyPotWarning += "Warning: High transaction count with low balance detected."
+        }
+      }
+
+
 
       
       // Build the JSON response data including errors (if any)
       const responseData = {
         gasCostEth: estimateGasCostInEth.toString(),
         gasCostUsd: gasCostUsd.toString(),
-        isValidReciever: validateAddress(recipient),
+        isValidReciever: validateAddress(normalizedRecipient),
         transactionStatus: txStatus,
-        transactionType: gasEstimateResult.data.txType,
+        transactionType: gasEstimateResult.success ? gasEstimateResult.data.txType : 0,
         ...(gasEstimateResult?.error ? { ErrorReason: gasEstimateResult.error } : {}),
         ...(errors.length > 0 ? { errors } : {}),
-        isRecieverContract: gasEstimateResult.data.isContract,
         amount: amount,
         balanceBefore: userWalletBalance.toString(),
         balanceAfter: totalBalanceAfterTx.toString(),
         ethPriceInUsd: ethUsdGecko,
         userAddress: userWalletAddress,
-        receiverAddress: recipient,
+        receiverAddress: normalizedRecipient,
+        isContract: gasEstimateResult.data.isContract,
+        honeyPotWarning: honeyPotWarning || null,
+        ...(gasEstimateResult?.error ? { ErrorReason: gasEstimateResult.error } : {}),
         networkDetails: {
-          ...gasEstimateResult.network,
-          netChainId: gasEstimateResult.network.netChainId.toString()
+          netName: gasEstimateResult.data.network.netName,
+          netChainId: gasEstimateResult.data.network.chainId.toString()
       },
       };
   

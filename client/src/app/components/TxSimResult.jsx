@@ -1,109 +1,211 @@
-import { FaUser, FaWallet, FaGasPump, FaCheckCircle, FaTimesCircle, FaNetworkWired } from "react-icons/fa";
-import { MdAttachMoney, MdOutlinePriceChange } from "react-icons/md";
+import { 
+  FaUser, 
+  FaWallet, 
+  FaGasPump, 
+  FaCheckCircle, 
+  FaTimesCircle, 
+  FaNetworkWired,
+  FaEthereum
+} from "react-icons/fa";
+import { 
+  MdAttachMoney, 
+  MdOutlinePriceChange,
+  MdSecurity
+} from "react-icons/md";
 import { IoMdCheckmarkCircleOutline } from "react-icons/io";
 
-export default function TxSimulationResult({ simulationData }) { 
-  
-  console.log("Rendering with data:", simulationData);
+export default function TxSimulationResult({ simulationData }) {  
+  if (!simulationData) return null;
 
-  if (!simulationData) {
-    return (
-      ""
-    );
-  }
-
-  const icons = {
-    receiverAddress: <FaUser className="text-[#00FFC6] text-lg" />,
-    userAddress: <FaUser className="text-[#00FFC6] text-lg" />,
-    amount: <MdAttachMoney className="text-[#FF9800] text-lg" />,
-    gasCostEth: <FaGasPump className="text-[#FFEB3B] text-lg" />,
-    gasCostUsd: <MdOutlinePriceChange className="text-[#FFEB3B] text-lg" />,
-    balanceBefore: <FaWallet className="text-[#4CAF50] text-lg" />,
-    balanceAfter: <FaWallet className="text-[#4CAF50] text-lg" />,
-    isValidReciever: simulationData.isValidReciever !== false
-      ? <IoMdCheckmarkCircleOutline className="text-[#2196F3] text-lg" /> 
-      : <FaTimesCircle className="text-red-500 text-lg" />,
-    transactionStatus: simulationData.transactionStatus === "Likely to succeed"
-      ? <FaCheckCircle className="text-[#8BC34A] text-lg" /> 
-      : <FaTimesCircle className="text-red-500 text-lg" />,
-    ethPriceInUsd: <MdOutlinePriceChange className="text-[#FF5722] text-lg" />,
-    networkDetails: <FaNetworkWired className="text-[#673AB7] text-lg" />,
-    // add a fallback
-    network: <FaNetworkWired className="text-[#673AB7] text-lg" />,
-
-  };
-
-  const formatValue = (value) => {
-    if (Array.isArray(value)) {
-      return value.join(", "); // Removes brackets & quotes from arrays
-    } 
-    if (typeof value === "object" && value !== null) {
-      return Object.entries(value)
-        .map(([k, v]) => `${k}: ${v}`)
-        .join(" | "); // Formats objects as "key: value" pairs
+  // Status configuration
+  const statusConfig = {
+    fail: {
+      icon: <FaTimesCircle className="text-[#FF4D4D] text-2xl" />,
+      bg: "bg-[#2A0A0A]",
+      border: "border-[#FF4D4D]/30",
+      text: "text-[#FF4D4D]"
+    },
+    warning: {
+      icon: <MdSecurity className="text-[#FFAA33] text-2xl" />,
+      bg: "bg-[#2A200A]",
+      border: "border-[#FFAA33]/30",
+      text: "text-[#FFAA33]"
+    },
+    success: {
+      icon: <FaCheckCircle className="text-[#33FFAA] text-2xl" />,
+      bg: "bg-[#0A2A1A]",
+      border: "border-[#33FFAA]/30",
+      text: "text-[#33FFAA]"
     }
-    return value.toString();
   };
+
+  const getStatus = () => {
+    if (simulationData.ErrorReason) return statusConfig.fail;
+    if (simulationData.honeyPotWarning) return statusConfig.warning;
+    return statusConfig.success;
+  };
+
+  const status = getStatus();
 
   return (
-    <div className="p-6 w-full max-w-4xl mt-6 flex flex-wrap gap-4 bg-[#121212] backdrop-blur-md rounded-xl shadow-xl border border-[#2A2A2A]">
-  <h2 className="w-full text-2xl font-bold text-[#00FFAA] tracking-wide mb-4 border-b border-[#2A2A2A] pb-2">
-    Simulation Result
-  </h2>
-
-  {/* Main Error Display */}
-  {simulationData.ErrorReason && (
-    <div className="w-full p-4 bg-red-900/80 text-white rounded-lg flex items-center gap-3">
-      <FaTimesCircle className="text-2xl" />
-      <div>
-        <h3 className="font-bold">Transaction Will Fail</h3>
-        <p>{simulationData.ErrorReason}</p>
-        {simulationData.isRecieverContract && (
-          <p className="mt-2 text-yellow-300 flex items-center gap-2">
-            <FaNetworkWired /> Recipient is a smart contract
-          </p>
-        )}
+    <div className="w-full max-w-5xl mt-6 bg-[#0A0A12]/90 backdrop-blur-lg rounded-xl shadow-2xl border border-[#2A2A3A] overflow-hidden">
+  {/* Header */}
+  <div className={`p-5 ${status.bg} ${status.border} border-b flex items-center justify-between`}>
+    <div className="flex items-center gap-3">
+      {status.icon}
+      <h2 className="text-xl font-bold text-white">
+        Transaction Simulation Result
+      </h2>
+    </div>
+    <div className="flex items-center gap-2">
+      <div className={`px-3 py-1 rounded-full text-xs font-bold ${status.text} bg-black/20`}>
+        {simulationData.transactionStatus || "Simulated"}
       </div>
+      {simulationData.transactionType !== undefined && (
+  <div className="px-2 py-1 rounded-full text-xs font-medium bg-[#33335A] text-[#A0A0FF]">
+    {simulationData.transactionType === 0 ? "Legacy" : 
+     simulationData.transactionType === 1 ? "EIP-2930" : 
+     "EIP-1559"}
+  </div>
+)}
     </div>
-  )}
+  </div>
 
-  {/* Additional Errors List */}
-  {simulationData.errors?.length > 0 && (
-    <div className="w-full p-4 bg-[#FF5722]/80 text-white rounded-lg">
-      <h3 className="font-semibold flex items-center gap-2">
-        <FaTimesCircle /> Validation Errors:
-      </h3>
-      <ul className="mt-2 space-y-1">
-        {simulationData.errors.map((err, i) => (
-          <li key={i}>• {err}</li>
-        ))}
-      </ul>
-    </div>
-  )}
+  {/* Main Content */}
+  <div className="p-5">
+    {/* Error/Warning Messages would go here if present */}
 
-  {/* Data Cards */}
-  {Object.entries(simulationData).map(([key, value]) => (
-    !['errors', 'ErrorReason'].includes(key) && (
-      <div
-        key={key}
-        className={`flex-1 min-w-[250px] max-w-[320px] border rounded-lg p-4 bg-[#1A1A1A] shadow-md transition-all hover:scale-[1.02] flex items-center gap-3 ${
-          value === null ? 'border-red-500/50' : 'border-[#3A3A3A]'
-        }`}
-      >
-        {icons[key] || <FaUser className="text-[#888] text-lg" />}
-        <div className="w-full">
-          <p className="text-[#00FFAA] uppercase font-medium text-sm truncate">
-            {key.replace(/([A-Z])/g, " $1").trim()}:
-          </p>
-          <span className={`block text-sm break-words ${
-            value === null ? 'text-red-400 italic' : 'text-[#EAEAEA] font-light'
-          }`}>
-            {value === null ? 'Estimation failed' : formatValue(value)}
-          </span>
+    {/* Data Dashboard */}
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      {/* Left Column - Financials */}
+      <div className="bg-[#12121A] rounded-xl p-5 border border-[#2A2A3A]">
+        <h3 className="text-lg font-semibold text-[#A0A0FF] mb-4 flex items-center gap-2">
+          <FaEthereum /> Financial Summary
+        </h3>
+        
+        <div className="space-y-4">
+          {/* ETH Price */}
+          <div className="flex justify-between items-center pb-4 border-b border-[#2A2A3A]">
+            <div className="text-[#A0A0FF]">ETH Price</div>
+            <div className="font-mono text-[#33FFAA]">
+              ${simulationData.ethPriceInUsd?.toLocaleString() || "0.00"}
+            </div>
+          </div>
+
+          {/* Balance Row */}
+          <div className="flex justify-between items-center pt-2">
+            <div className="text-[#A0A0FF]">Balance</div>
+            <div className="flex items-center gap-8">
+              <div className="text-right">
+                <div className="text-xs text-[#888]">Before</div>
+                <div className="font-mono">{simulationData.balanceBefore || "0.0"} ETH</div>
+              </div>
+              <div className="text-2xl text-[#888]">→</div>
+              <div className="text-right">
+                <div className="text-xs text-[#888]">After</div>
+                <div className={`font-mono ${
+                  simulationData.balanceAfter?.startsWith('-') 
+                    ? 'text-[#FF4D4D]' 
+                    : 'text-[#33FFAA]'
+                }`}>
+                  {simulationData.balanceAfter || "0.0"} ETH
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Amount Row */}
+          <div className="flex justify-between items-center pt-4 border-t border-[#2A2A3A]">
+            <div className="text-[#A0A0FF]">Transfer Amount</div>
+            <div className="font-mono text-[#FFAA33]">
+              {simulationData.amount || "0.0"} ETH
+            </div>
+          </div>
+
+          {/* Gas Row */}
+          <div className="flex justify-between items-center pt-4 border-t border-[#2A2A3A]">
+            <div className="text-[#A0A0FF]">Gas Fees</div>
+            <div className="text-right">
+              <div className="font-mono">{simulationData.gasCostEth || "0.0"} ETH</div>
+              <div className="text-xs text-[#888]">≈ ${simulationData.gasCostUsd || "0.00"}</div>
+            </div>
+          </div>
         </div>
       </div>
-    )
-  ))}
+
+      {/* Right Column - Details */}
+      <div className="bg-[#12121A] rounded-xl p-5 border border-[#2A2A3A]">
+        <h3 className="text-lg font-semibold text-[#A0A0FF] mb-4 flex items-center gap-2">
+          <FaNetworkWired /> Transaction Details
+        </h3>
+        
+        <div className="space-y-4">
+          {/* Addresses */}
+          <div>
+            <div className="text-[#A0A0FF] mb-2">Addresses</div>
+            <div className="space-y-3">
+              <div>
+                <div className="text-xs text-[#888]">From</div>
+                <div className="font-mono text-sm text-white break-all">
+                  {simulationData.userAddress || "Not available"}
+                </div>
+              </div>
+              <div>
+                <div className="text-xs text-[#888]">To</div>
+                <div className="font-mono text-sm text-white break-all">
+                  {simulationData.receiverAddress || "Not available"}
+                </div>
+                {simulationData.isContract && (
+                  <div className="mt-1 text-xs text-[#FFAA33] flex items-center gap-1">
+                    <FaNetworkWired size={12} /> Contract address
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Network */}
+          <div className="pt-4 border-t border-[#2A2A3A]">
+            <div className="text-[#A0A0FF] mb-2">Network</div>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-[#33AAFF]"></div>
+              <div>
+                {simulationData.networkDetails
+                  ? `${simulationData.networkDetails.netName} (Chain ID: ${simulationData.networkDetails.netChainId})`
+                  : "Mainnet"}
+              </div>
+            </div>
+          </div>
+
+          {/* Validation */}
+          <div className="pt-4 border-t border-[#2A2A3A]">
+            <div className="text-[#A0A0FF] mb-2">Validation</div>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                {simulationData.isValidReciever ? (
+                  <>
+                    <IoMdCheckmarkCircleOutline className="text-[#33FFAA]" />
+                    <span>Valid recipient address</span>
+                  </>
+                ) : (
+                  <>
+                    <FaTimesCircle className="text-[#FF4D4D]" />
+                    <span>Invalid recipient</span>
+                  </>
+                )}
+              </div>
+              {simulationData.honeyPotWarning && (
+                <div className="flex items-center gap-2 text-[#FFAA33]">
+                  <MdSecurity />
+                  <span className="text-sm">{simulationData.honeyPotWarning}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
   );
 }

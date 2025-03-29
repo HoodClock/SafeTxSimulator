@@ -27,7 +27,7 @@ export function useWalletConnect() {
         if (attempts === maxAttempts) {
           throw new Error('Failed to connect after retries');
         }
-        await new Promise(resolve => setTimeout(resolve, 2000)); // 2s delay
+        await new Promise(resolve => setTimeout(resolve, 2000)); // 2sec delay
       }
     }
 
