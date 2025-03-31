@@ -19,7 +19,6 @@ export function useWalletConnect() {
     while (attempts < maxAttempts) {
       try {
         await open();
-        console.log('Wallet connected successfully');
         break; // Exit on success
       } catch (error) {
         attempts++;
@@ -37,7 +36,6 @@ export function useWalletConnect() {
   // Disconnect handler
   const handleDisconnect = useCallback(() => {
     disconnect();
-    console.log('Wallet disconnected');
   }, [disconnect]);
 
   return {
